@@ -141,10 +141,62 @@ ggplot(mpg, aes(x = displ, y = hwy)) +
 ggplot(mpg, aes(x = displ, y = hwy)) +
   geom_point(aes(color = class)) +
   geom_smooth(
-    data = filter(mpg, class == "subcompact")
+    data = filter(mpg, class == "subcompact"),
+    se = F
 )
-  )
 
+## #### ## 
+## EGGS ## 
+## #### ## 
+ggplot(mpg, aes(x = displ, y= hwy, color = drv)) +
+  geom_point() + 
+  geom_smooth(se = F)
 
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point() +
+  geom_smooth(se = F)
 
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point() +
+  geom_smooth(se = F, aes(group = drv))
 
+ggplot(mpg, aes(x = displ, y = hwy, col = drv)) +
+  geom_point() +
+  geom_smooth(se = F)
+
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point(aes(color = drv)) +
+  geom_smooth(se = F)
+
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point(aes(col = drv)) +
+  geom_smooth(se = F, aes(linetype = drv))
+
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point(aes(col = drv))
+
+## ## ## ## ## ## ## ## ## 
+## Stat. Transformation ##
+## ## ## ## ## ## ## ## ##
+
+print("
+@note: The algorithm used to calc. new values for a graph 
+called stat (for statistical transformation)
+Each geom uses a default stat argument 
+@note: ?geom_bar (or other) and search for computed variables
+      ")
+# Can use geom and stat interchangeably
+# e.g:
+ggplot(diamonds) + geom_bar(aes(x = cut))
+ggplot(diamonds) + stat_count(aes(x = cut))
+
+print("
+      @note: The above works because every stat
+has a default geom and every geom has a def stat. 
+ If want to set your own y for bar chart, use stat = 'identity'
+      ")
+# Proportion bar chart 
+ggplot(diamonds) + geom_bar(aes(x = cut, y = ..prop.., group = 1)) # @question: What does group do? 
+
+# Summarize y values for every x 
+ggplot(diamonds) + geom_bar(aes(x = cut, y = depth))
