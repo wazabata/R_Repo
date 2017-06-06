@@ -199,4 +199,66 @@ has a default geom and every geom has a def stat.
 ggplot(diamonds) + geom_bar(aes(x = cut, y = ..prop.., group = 1)) # @question: What does group do? 
 
 # Summarize y values for every x 
-ggplot(diamonds) + geom_bar(aes(x = cut, y = depth))
+ggplot(diamonds) + stat_summary(aes(x = cut, y = depth),
+                            fun.ymin = min, 
+                            fun.ymax =  max, 
+                            fun.y = median)
+?stat_summary
+?stat_bin
+
+## #### ##
+## EGGS ##
+## #### ##
+
+# Defaylt geom associated with stat_summary is geom_pointrange
+ggplot(diamonds, aes(x = cut, y = depth)) + 
+         geom_pointrange(stat = "summary", fun.ymin = min, fun.ymax = max, fun.y = median)
+
+?geom_line
+
+ggplot(data = diamonds) +
+  geom_bar(aes(x = cut, y = ..prop.., fill = cut))
+
+# If group is not set to 1, then all the bars have prop == 1. 
+# The function geom_bar assumes that the groups are equal to the x values, 
+# since the stat computes the counts within the group.
+
+## ## ## ## ## 
+## Pos. Adj ## 
+## ## ## ## ## 
+
+# Can use a diff variable for fill in geom_bar, 
+# Will atomatically split bars
+ggplot(diamonds) +
+  geom_bar(aes(x = cut, fill = clarity))
+
+# @note: Stacking done automatiocally by position adj. (spec,. by position arg)
+
+# Pos = identity: overlaps bars, but useful for points
+ggplot(diamonds, aes(x = cut, fill = clarity)) +
+  geom_bar(alpha = 1/5, position = "identity")
+  
+ggplot(diamonds, aes(x = cut, color = clarity)) +
+  geom_bar(fill= NA, position = "identity")
+
+
+# Position = fill works like stacking 
+# But stacked bars the same height -> better to compare groups
+ggplot(diamonds, aes(x = cut, fill = clarity)) +
+  geom_bar(position = "fill")
+
+# Position = dodge places overlapping objects beside each other 
+ggplot(diamonds) +
+  geom_bar(aes(x = cut, fill = clarity), position = 'dodge')
+
+# For scatterplots: to avoid rounding and overlapping of vars
+# (How to know if one point is one or 1000 points rounded)
+# use pos = jitter to add random noise to data
+# reduces chance of overlap because no two points will receive 
+# same random noise
+ggplot(mpg) + 
+  geom_point(aes(x = displ, y = hwy), position = "jitter")
+ggplot(mpg) + 
+  geom_point(aes(x = displ, y = hwy))
+# Can also do geom_jitter instead of geom_point
+# To look up position, do ?position_x (x = dodge, identity, jitter, fill etc.. )
