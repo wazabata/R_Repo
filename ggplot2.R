@@ -262,3 +262,60 @@ ggplot(mpg) +
   geom_point(aes(x = displ, y = hwy))
 # Can also do geom_jitter instead of geom_point
 # To look up position, do ?position_x (x = dodge, identity, jitter, fill etc.. )
+
+## ## ## ## 
+## EGGS ## 
+## ## ## ## 
+
+# Add some jitter to the plot 
+ggplot(mpg) +
+  geom_point(aes(x = cty, y = hwy),  position = "jitter") # Have to put position in geom object
+
+# How to control jittering 
+ggplot(mpg) +
+  geom_jitter(aes(x = cty, y = hwy), width = 10, height = 20) 
+
+# geom_count
+ggplot(mpg) +
+  geom_count(aes(x = cty, y = hwy))
+# geom_count maps count of numbers of observation at each location to the point size
+
+# defualt pos adjustment for geom boxplot -> dodge
+?geom_boxplot
+ggplot(mpg) + 
+  geom_boxplot(aes(x = cyl, y = hwy, color = class)) #because dodge -> placed side by side
+
+# If use pos = identity instead:
+ggplot(mpg) + 
+  geom_boxplot(aes(x = cyl, y = hwy, color = class), position = "identity") #overlapped. 
+
+## ## ## ## ## ## 
+## COORD. SYS. ##
+## ## ## ## ## ## 
+
+# Flip it 
+ggplot(mpg) +
+  geom_boxplot(aes(x = class, y = hwy)) + 
+  coord_flip()
+
+## Polar coord
+bar <- ggplot(data = diamonds) +
+  geom_bar(aes(x = cut, fill = cut),
+           show.legend = F, width = 1) +
+  theme(aspect.ratio = 1) + labs(x = NULL, y = NULL)
+bar + coord_flip()
+bar + coord_polar()  
+
+## #### ##
+## EGGS ##
+## #### ##
+
+# Turn bar chart into pie chart 
+ggplot(diamonds) + # geom_bar, 1 bar with the different cut counts 
+  geom_bar(aes(x = factor(1), fill = cut), width = 1)  +
+  coord_polar(theta = "y") # map angle to y
+
+# ?labs
+?labs()
+
+?coord_quickmap()
