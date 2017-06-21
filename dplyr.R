@@ -140,4 +140,62 @@ not_cancelled %>%
 ## EGGS ## 
 ## #### ## 
 
+## Equivalent 
+not_cancelled %>% 
+  count(dest)
+# <==> 
+not_cancelled %>% 
+  group_by(dest) %>% 
+  summarise(count = n()) %>% 
+  select(dest,count)
 
+not_cancelled %>% 
+  count(tailnum, wt = distance)
+not_cancelled %>% 
+  group_by(tailnum) %>% 
+  summarise(count = sum(distance))
+
+View(flights %>%
+       filter(is.na(dep_delay)))
+#Instead of doing  is.na(dep_delay) | is.na(arr_delay)
+# Can just check if dep_time is na 
+
+# # of cancelled flights per day 
+flights %>% 
+  mutate(cancelled = (is.na(dep_delay) | is.na(arr_delay))) %>% 
+  group_by(year, month, day) %>% 
+  summarise(count = sum(cancelled, na.rm = T),
+            average_dep_delay = mean(dep_delay, na.rm = T),
+            prop_cancelled = mean(cancelled)) %>% 
+  ggplot(aes(x = average_dep_delay, y = prop_cancelled)) + 
+  geom_point() + 
+  geom_smooth()
+
+## Worst carrier 
+flights %>% 
+  group_by(carrier) %>% 
+  summarise(average_delay = mean(arr_delay, na.rm = T)) %>% 
+  arrange(desc(average_delay))
+
+## Count before first delay greater than an hour
+View(not_cancelled %>% 
+  mutate(bad_delay = (arr_delay > 60),
+         i = 1) %>%
+  group_by(tailnum) %>%
+  arrange(tailnum, year, month, day) %>% 
+  mutate(numb_flights = cumsum(i)) %>% 
+  filter(bad_delay == T) %>% 
+  summarise(first_flight = first(numb_flights)))
+  
+
+# Alternatively
+View(not_cancelled %>% 
+  mutate(bad_delay = arr_delay > 60) %>% 
+  group_by(tailnum) %>% 
+  arrange(tailnum, year, month, day) %>%
+  mutate(count = cumsum(bad_delay)) %>% 
+  filter(count < 1) %>% 
+    count(sort = T))
+
+
+## Count -> sort argument sort count insted of doing arrange(count)
