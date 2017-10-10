@@ -199,3 +199,67 @@ View(not_cancelled %>%
 
 
 ## Count -> sort argument sort count insted of doing arrange(count)
+
+###############
+## LAST EGGS ##
+###############
+
+not_cancelled %>% 
+  group_by(tailnum) %>% 
+  summarise(mean_delay = mean(arr_delay, na.rm = T)) %>% 
+  filter(mean_delay == max(mean_delay))
+
+View(not_cancelled %>% 
+  mutate(dep_timeHour = floor(dep_time / 100)) %>% 
+  group_by(dep_timeHour) %>% 
+  summarise(mean_delay = mean(arr_delay) + mean(dep_delay)) %>% 
+  arrange(mean_delay))
+
+## Verify with plots 
+# not_cancelled %>% 
+#   mutate(total_delay = arr_delay + dep_delay) %>% 
+#   ggplot() +
+#   geom_point(aes(x = dep_time, y = total_delay)) +
+#   geom_smooth(method = lm)
+
+
+
+# For each dest -> total minutes of delay 
+dest_delay <- not_cancelled %>% 
+  group_by(dest) %>% 
+  summarise(total_delay = sum(arr_delay) + sum(dep_delay))
+# Proportion of the total delay for its destination
+# Do it in one go 
+not_cancelled %>% 
+  group_by(dest) %>% 
+  filter(arr_delay > 0) %>% 
+  mutate(prop_delay = arr_delay / sum(arr_delay)) %>% 
+  select(year:day, dest, arr_delay, prop_delay)
+ 
+# How delay of one flight related to delay of the flight directly after it 
+timeDiffBetweenFlights <- not_cancelled %>% 
+  filter(dep_delay > 0) %>% 
+  arrange(year, month, day, new_depTime) %>%
+  mutate(diffBetweenTimes = (new_depTime - lag(new_depTime)) %% (24 * 60)) %>%
+  select(year:day, tailnum, new_depTime, dep_delay, diffBetweenTimes)
+
+# FInd cuttoff for diff between last flight of day (in AM of next day)
+# and first flight of the day  by plotting (arbitrary?) #
+timeDiffBetweenFlights %>% filter(between(new_depTime, 200, 600)) %>%
+  filter(diffBetweenTimes > 70) %>% 
+ggplot() +
+  geom_point(aes(x = new_depTime, y = diffBetweenTimes))
+
+# Set first flight of the day delay as = 0, assume first flight happens 
+# between 5 and 6 AM 
+View(timeDiffBetweenFlights %<>% 
+  mutate(firstFlightOfDay = ifelse((new_depTime >= 300 & new_depTime <= 360) 
+                                   & diffBetweenTimes > 60, T, F)))
+
+# How many did we get
+nrow(timeDiffBetweenFlights %>% 
+  group_by(year, month, day) %>% 
+  summarise(nday = 1)) # 1 year 
+nrow(timeDiffBetweenFlights %>% filter(firstFlightOfDay == T)) # only 228 
+
+# Change way of doing this! 
