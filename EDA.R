@@ -1,6 +1,7 @@
 # V - Exploratory Data Analysis ----
 library(dplyr)
 library(ggplot2)
+library(tidyr)
 # 1 - What types of variation occurs within my variables? ====
 
 # a) Variation ####
@@ -301,7 +302,7 @@ flights %>%
   group_by(dest) %>% 
   filter(n() == 12) %>% ## Select only destinations that push flights all 12 months 
   ungroup() %>% 
-  mutate(dest = fct_reorder(dest, dep_delay)) %>% # @trescool trick 
+  mutate(dest = fct_reorder(dest, dep_delay)) %>% # @trescool @trick reordering factor by dest delay
   ggplot(aes(x = factor(month), y = dest, fill = dep_delay)) + 
   geom_tile() + 
   scale_fill_viridis()
@@ -345,3 +346,69 @@ ggplot(diamonds %>%
          filter(carat < 3), 
        aes(x = carat, y = price)) + 
   geom_boxplot(mapping = aes(group = cut_number(carat, 20))) # @trescool
+
+# Eggs ---- 
+
+# 1. Instead of summarizing conditional dist. with a boxplot,
+# use a frequency plot. What to consider if using cut_width() versus cut_number()?
+ggplot(diamonds, 
+       aes(x = price, col = cut_width(carat, .3))) + 
+  geom_freqpoly() ## If use y = ..density.. -> make the dist. comparable
+
+ggplot(diamonds, 
+       aes(x = price, y = ..density.., col = cut_number(carat, 10))) + 
+  geom_freqpoly() # y = ..density.. will give same results. 
+
+# 2. Visualize the distribution of carat, partioned by price 
+ggplot(diamonds, 
+       aes(y = carat, x = cut_number(price, 10))) + 
+         geom_boxplot() + 
+  coord_flip()
+
+# Or 
+ggplot(diamonds, 
+       aes(x = cut_width(price, 2000, boundary = 0), y = carat)) + 
+  geom_boxplot(varwidth = T) +  # if T -> box proportional to number of obs in box
+  coord_flip() + xlab("Price")
+
+# 3. How does the price dist. of large diamonds compare to small diamonds 
+diamonds %>% 
+  mutate(size = x * y * z) %>% 
+  ggplot(aes(x = cut_width(size,100, boundary = 0), y = price)) + 
+  geom_boxplot(varwidth = F) + 
+  coord_flip() + 
+  xlab("Size")
+# makes sense -> smaller diamonds can be either extremely cheap or can be 
+# extremely difficult to make. The intricacy + craftmanship explains the high price of smaller diamonds 
+
+## 5. plot the same but with binned plot: 
+ggplot(diamonds) + 
+  geom_boxplot(aes(x = cut_width(x,1), y = y)) + # Points still show here, but not all of them! -> will inevitabely lose some of details when binning
+  coord_cartesian(xlim = c(4,11), y = c(4,11))
+
+
+# Patterns and Models ----
+# install.packages("modelr")
+library(modelr)
+mod <- lm(log(price) ~ log(carat), data = diamonds)
+diamonds %>% 
+  add_residuals(mod) %>% 
+  mutate(resid = exp(resid))
+
+# Same if did 
+resids <- mod$residuals
+diamonds %>% 
+  mutate(resid = exp(resids)) %>%
+  ggplot() + 
+  geom_point(aes(x = carat, y = resid))
+
+diamonds %>% 
+  mutate(resid = exp(resids)) %>% 
+  ggplot()  + geom_boxplot(aes(x = cut, y = resid))
+## Once remove effect of carat on price, can see that better quality diamonds are more exp. 
+
+#What if did 
+diamonds  %>% 
+  ggplot()  + geom_boxplot(aes(x = cut, y = price)) ## Harder to see.. because of effect of carat..
+
+
